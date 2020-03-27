@@ -55,51 +55,102 @@ class snake(object):
             if event.type == pygame.QUIT:
                 pygame.quit()
         
-        #neuralNet Architecture 24,18,18,4
-        #inputs =   8x Distance to food
-        #           8x Distance to its tail
-        #           8x Distance to wall
-        normalize = 2*self.body[0].rows
-        w = (self.body[0].pos[0] - snack.pos[0])/normalize
-        n = (self.body[0].pos[1] - snack.pos[1])/normalize
-        e = (snack.pos[0] - self.body[0].pos[0])/normalize
-        s = (snack.pos[1] - self.body[0].pos[1])/normalize
-        
-        nw = (((w*w) + (n*n)) ** 0.5)/normalize
-        ne = (((e*e) + (n*n)) ** 0.5)/normalize
-        se = (((e*e) + (s*s)) ** 0.5)/normalize
-        sw = (((w*w) + (s*s)) ** 0.5)/normalize
+        #inputs = wall to left, wall infront, wall right, angle to food, tail on left, tail on right, tail front
+        inp = []
+        dx = self.dirnx
+        dy = self.dirny
 
-        distance_food = [w,nw,n,ne,e,se,s,sw]
+        #wall to left
+        if dx == 1 and (self.body[0].pos[1] - 1) == -1:
+            inp.append(1)
+        elif dx == -1 and (self.body[0].pos[1] + 1) == self.body[0].rows:
+            inp.append(1)
+        elif dy == 1 and (self.body[0].pos[0] + 1) == self.body[0].rows:
+            inp.append(1)
+        elif dy == -1 and (self.body[0].pos[0] - 1) == -1:
+            inp.append(1)
+        else:
+            inp.append(0)
 
-        w = (self.body[0].pos[0] - self.body[-1].pos[0])/normalize
-        n = (self.body[0].pos[1] - self.body[-1].pos[1])/normalize
-        e = (self.body[-1].pos[0] - self.body[0].pos[0])/normalize
-        s = (self.body[-1].pos[1] - self.body[0].pos[1])/normalize
-        
-        nw = (((w*w) + (n*n)) ** 0.5)/normalize
-        ne = (((e*e) + (n*n)) ** 0.5)/normalize
-        se = (((e*e) + (s*s)) ** 0.5)/normalize
-        sw = (((w*w) + (s*s)) ** 0.5)/normalize
+        #wall infront
+        if dx == 1 and (self.body[0].pos[0] + 1) == self.body[0].rows:
+            inp.append(1)
+        elif dx == -1 and (self.body[0].pos[0] - 1) == -1:
+            inp.append(1)
+        elif dy == 1 and (self.body[0].pos[1] + 1) == self.body[0].rows:
+            inp.append(1)
+        elif dy == -1 and (self.body[0].pos[1] - 1) == -1:
+            inp.append(1)
+        else:
+            inp.append(0)
 
-        distance_tail = [w,nw,n,ne,e,se,s,sw]
-        
-        w = (self.body[0].rows - self.body[0].pos[0])/normalize
-        n = (self.body[0].pos[1])/normalize
-        e = (self.body[0].pos[0])/normalize
-        s = (self.body[0].rows - self.body[0].pos[1])/normalize
-        
-        nw = (((w*w) + (n*n)) ** 0.5)/normalize
-        ne = (((e*e) + (n*n)) ** 0.5)/normalize
-        se = (((e*e) + (s*s)) ** 0.5)/normalize
-        sw = (((w*w) + (s*s)) ** 0.5)/normalize
+        #wall to right
+        if dx == 1 and (self.body[0].pos[1] + 1) == self.body[0].rows:
+            inp.append(1)
+        elif dx == -1 and (self.body[0].pos[1] - 1) == -1:
+            inp.append(1)
+        elif dy == 1 and (self.body[0].pos[0] - 1) == -1:
+            inp.append(1)
+        elif dy == -1 and (self.body[0].pos[0] + 1) == self.body[0].rows:
+            inp.append(1)
+        else:
+            inp.append(0)
 
-        distance_wall = [w,nw,n,ne,e,se,s,sw]
+        #angle to the food
+        x1 = snack.pos[0] - self.body[0].pos[0]
+        y1 = self.body[0].pos[1] - snack.pos[1]
         
-        inp = [ distance_food[0],distance_food[1],distance_food[2],distance_food[3],distance_food[4],distance_food[5],distance_food[6],distance_food[7],
-                distance_tail[0],distance_tail[1],distance_tail[2],distance_tail[3],distance_tail[4],distance_tail[5],distance_tail[6],distance_tail[7],
-                distance_wall[0],distance_wall[1],distance_wall[2],distance_wall[3],distance_wall[4],distance_wall[5],distance_wall[6],distance_wall[7] ]
-        
+        dot = -dy*y1 + dx * x1
+        if x1+y1 != 0:
+            cosAngle = dot/((x1*x1 + y1*y1) ** 0.5)
+            angle = (math.acos(cosAngle) * 180)/math.pi
+        else:
+            angle = 0
+        #print(x1,'i+',y1,'j')
+        #print(dx,'i+',-dy,'j')
+        #print(angle)
+        if (dx == 1 and y1<0) or (dx == -1 and y1>0) or (dy == 1 and x1<0) or (dy == -1 and x1<0):
+            angle *= -1
+
+        angle = angle/180
+        inp.append(angle)
+
+        #tail on left
+        if dx == 1 and (self.body[0].pos[1] - 1) == self.body[-1].pos[1]:
+            inp.append(1)
+        elif dx == -1 and (self.body[0].pos[1] + 1) == self.body[-1].pos[1]:
+            inp.append(1)
+        elif dy == 1 and (self.body[0].pos[0] + 1) == self.body[-1].pos[0]:
+            inp.append(1)
+        elif dy == -1 and (self.body[0].pos[0] - 1) == self.body[-1].pos[0]:
+            inp.append(1)
+        else:
+            inp.append(0)
+
+        #tail infront
+        if dx == 1 and (self.body[0].pos[0] + 1) == self.body[-1].pos[0]:
+            inp.append(1)
+        elif dx == -1 and (self.body[0].pos[0] - 1) == self.body[-1].pos[0]:
+            inp.append(1)
+        elif dy == 1 and (self.body[0].pos[1] + 1) == self.body[-1].pos[1]:
+            inp.append(1)
+        elif dy == -1 and (self.body[0].pos[1] - 1) == self.body[-1].pos[1]:
+            inp.append(1)
+        else:
+            inp.append(0)
+
+        #tail to right
+        if dx == 1 and (self.body[0].pos[1] + 1) == self.body[-1].pos[1]:
+            inp.append(1)
+        elif dx == -1 and (self.body[0].pos[1] - 1) == self.body[-1].pos[1]:
+            inp.append(1)
+        elif dy == 1 and (self.body[0].pos[0] - 1) == self.body[-1].pos[0]:
+            inp.append(1)
+        elif dy == -1 and (self.body[0].pos[0] + 1) == self.body[-1].pos[0]:
+            inp.append(1)
+        else:
+            inp.append(0)
+
         keys = self.brain.feedforward(inp)
 
         big = keys[0]
@@ -161,7 +212,7 @@ class snake(object):
         self.body.append(self.head)
         self.turns = {}
         self.dirnx = 0
-        self.dirny = 0
+        self.dirny = 1
 
     def addCube(self):
         tail = self.body[-1]
@@ -254,7 +305,6 @@ def main():
             print('Score: ', len(s.body))
             message_box('AI Lost','Try Again?')
             s.reset((5,5))
-            break
         redrawWindow(win)
 
 main()

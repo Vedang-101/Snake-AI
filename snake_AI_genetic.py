@@ -45,61 +45,115 @@ class snake(object):
 
         self.score = 0
         self.fitness = 0
+        self.energy = self.body[0].rows * self.body[0].rows
 
         if nn!= None:
             self.brain = nn.copy()
         else:
-            self.brain = NeuralNetwork([24,18,18,9,4])
+            self.brain = NeuralNetwork([8,15,9,4])
 
     def keys_record(self, index):
         global snack, width
 
-        # for event in pygame.event.get():
-        #     if event.type == pygame.QUIT:
-        #         pygame.quit()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
         
-        normalize = self.body[0].rows * (2 ** 0.5)
+        #inputs = wall to left, wall infront, wall right, angle to food, tail on left, tail on right, tail front, energy left
+        inp = []
+        dx = self.dirnx
+        dy = self.dirny
 
-        w = (self.body[0].pos[0] - snack[index].pos[0])/normalize
-        n = (self.body[0].pos[1] - snack[index].pos[1])/normalize
-        e = (snack[index].pos[0] - self.body[0].pos[0])/normalize
-        s = (snack[index].pos[1] - self.body[0].pos[1])/normalize
-        
-        nw = (((w*w) + (n*n)) ** 0.5)/normalize
-        ne = (((e*e) + (n*n)) ** 0.5)/normalize
-        se = (((e*e) + (s*s)) ** 0.5)/normalize
-        sw = (((w*w) + (s*s)) ** 0.5)/normalize
+        #wall to left
+        if dx == 1 and (self.body[0].pos[1] - 1) == -1:
+            inp.append(1)
+        elif dx == -1 and (self.body[0].pos[1] + 1) == self.body[0].rows:
+            inp.append(1)
+        elif dy == 1 and (self.body[0].pos[0] + 1) == self.body[0].rows:
+            inp.append(1)
+        elif dy == -1 and (self.body[0].pos[0] - 1) == -1:
+            inp.append(1)
+        else:
+            inp.append(0)
 
-        distance_food = [w,nw,n,ne,e,se,s,sw]
+        #wall infront
+        if dx == 1 and (self.body[0].pos[0] + 1) == self.body[0].rows:
+            inp.append(1)
+        elif dx == -1 and (self.body[0].pos[0] - 1) == -1:
+            inp.append(1)
+        elif dy == 1 and (self.body[0].pos[1] + 1) == self.body[0].rows:
+            inp.append(1)
+        elif dy == -1 and (self.body[0].pos[1] - 1) == -1:
+            inp.append(1)
+        else:
+            inp.append(0)
 
-        w = (self.body[0].pos[0] - self.body[-1].pos[0])/normalize
-        n = (self.body[0].pos[1] - self.body[-1].pos[1])/normalize
-        e = (self.body[-1].pos[0] - self.body[0].pos[0])/normalize
-        s = (self.body[-1].pos[1] - self.body[0].pos[1])/normalize
-        
-        nw = (((w*w) + (n*n)) ** 0.5)/normalize
-        ne = (((e*e) + (n*n)) ** 0.5)/normalize
-        se = (((e*e) + (s*s)) ** 0.5)/normalize
-        sw = (((w*w) + (s*s)) ** 0.5)/normalize
+        #wall to right
+        if dx == 1 and (self.body[0].pos[1] + 1) == self.body[0].rows:
+            inp.append(1)
+        elif dx == -1 and (self.body[0].pos[1] - 1) == -1:
+            inp.append(1)
+        elif dy == 1 and (self.body[0].pos[0] - 1) == -1:
+            inp.append(1)
+        elif dy == -1 and (self.body[0].pos[0] + 1) == self.body[0].rows:
+            inp.append(1)
+        else:
+            inp.append(0)
 
-        distance_tail = [w,nw,n,ne,e,se,s,sw]
+        #angle to the food
+        x1 = snack[index].pos[0] - self.body[0].pos[0]
+        y1 = self.body[0].pos[1] - snack[index].pos[1]
         
-        w = (self.body[0].rows - self.body[0].pos[0])/normalize
-        n = (self.body[0].pos[1])/normalize
-        e = (self.body[0].pos[0])/normalize
-        s = (self.body[0].rows - self.body[0].pos[1])/normalize
-        
-        nw = (((w*w) + (n*n)) ** 0.5)/normalize
-        ne = (((e*e) + (n*n)) ** 0.5)/normalize
-        se = (((e*e) + (s*s)) ** 0.5)/normalize
-        sw = (((w*w) + (s*s)) ** 0.5)/normalize
+        dot = -dy*y1 + dx * x1
+        if x1+y1 != 0:
+            cosAngle = dot/((x1*x1 + y1*y1) ** 0.5)
+            angle = (math.acos(cosAngle) * 180)/math.pi
+        else:
+            angle = 0
+        if (dx == 1 and y1<0) or (dx == -1 and y1>0) or (dy == 1 and x1<0) or (dy == -1 and x1<0):
+            angle *= -1
 
-        distance_wall = [w,nw,n,ne,e,se,s,sw]
-        
-        inp = [ distance_food[0],distance_food[1],distance_food[2],distance_food[3],distance_food[4],distance_food[5],distance_food[6],distance_food[7],
-                distance_tail[0],distance_tail[1],distance_tail[2],distance_tail[3],distance_tail[4],distance_tail[5],distance_tail[6],distance_tail[7],
-                distance_wall[0],distance_wall[1],distance_wall[2],distance_wall[3],distance_wall[4],distance_wall[5],distance_wall[6],distance_wall[7] ]
-        
+        angle = angle/180
+        inp.append(angle)
+
+        #tail on left
+        if dx == 1 and (self.body[0].pos[1] - 1) == self.body[-1].pos[1]:
+            inp.append(1)
+        elif dx == -1 and (self.body[0].pos[1] + 1) == self.body[-1].pos[1]:
+            inp.append(1)
+        elif dy == 1 and (self.body[0].pos[0] + 1) == self.body[-1].pos[0]:
+            inp.append(1)
+        elif dy == -1 and (self.body[0].pos[0] - 1) == self.body[-1].pos[0]:
+            inp.append(1)
+        else:
+            inp.append(0)
+
+        #tail infront
+        if dx == 1 and (self.body[0].pos[0] + 1) == self.body[-1].pos[0]:
+            inp.append(1)
+        elif dx == -1 and (self.body[0].pos[0] - 1) == self.body[-1].pos[0]:
+            inp.append(1)
+        elif dy == 1 and (self.body[0].pos[1] + 1) == self.body[-1].pos[1]:
+            inp.append(1)
+        elif dy == -1 and (self.body[0].pos[1] - 1) == self.body[-1].pos[1]:
+            inp.append(1)
+        else:
+            inp.append(0)
+
+        #tail to right
+        if dx == 1 and (self.body[0].pos[1] + 1) == self.body[-1].pos[1]:
+            inp.append(1)
+        elif dx == -1 and (self.body[0].pos[1] - 1) == self.body[-1].pos[1]:
+            inp.append(1)
+        elif dy == 1 and (self.body[0].pos[0] - 1) == self.body[-1].pos[0]:
+            inp.append(1)
+        elif dy == -1 and (self.body[0].pos[0] + 1) == self.body[-1].pos[0]:
+            inp.append(1)
+        else:
+            inp.append(0)
+
+        inp.append(self.energy/(self.body[0].rows * self.body[0].rows))
+
         keys = self.brain.feedforward(inp)
 
         big = keys[0]
@@ -143,21 +197,23 @@ class snake(object):
 
     def dead(self):
         if self.body[0].dirnx == -1 and self.body[0].pos[0] <= -1:
-            self.score -= 10
+            #self.score -= 10
             return True
         elif self.body[0].dirnx == 1 and self.body[0].pos[0] >= self.body[0].rows:
-            self.score -= 10
+            #self.score -= 10
             return True
         elif self.body[0].dirny == -1 and self.body[0].pos[1] <=-1:
-            self.score -= 10
+            #self.score -= 10
             return True
         elif self.body[0].dirny == 1 and self.body[0].pos[1] >= self.body[0].rows:
-            self.score -= 10
+            #self.score -= 10
             return True
         for x in range(len(self.body)):
             if self.body[x].pos in list(map(lambda z:z.pos, self.body[x+1:])):
-                self.score -= 10
+                #self.score -= 10
                 return True
+        if self.energy <= 0:
+            return True
         return False
 
     def mutate(self):
@@ -245,13 +301,13 @@ def main():
     rows = 10
     generation = 1
 
-    population = 250
+    population = 2
     
-    #win = pygame.display.set_mode((width,width))
+    win = pygame.display.set_mode((width,width))
     s = []
     snack = []
     for i in range(population):
-        s.append(snake((255,255,255),(5,5),None))
+        s.append(snake((255,255,255),(int(rows/2),int(rows/2)),None))
         snack.append(cube(randomSnack(rows, s[i]), (150,0,0)))
     print('Snakes Added')
 
@@ -265,12 +321,13 @@ def main():
     while flag:
         loop = 0
         while loop<len(s):
-            #print('Debug ', loop)
             s[loop].keys_record(loop)
             s[loop].move()
             s[loop].score += 0.01
+            s[loop].energy -= 1
             if s[loop].body[0].pos == snack[loop].pos:
                 s[loop].score += 100
+                s[loop].energy = s[loop].body[0].rows * s[loop].body[0].rows
                 s[loop].addCube()
                 snack[loop] = cube(randomSnack(rows, s[loop]), (150,0,0))
 
@@ -282,13 +339,14 @@ def main():
             loop += 1
 
         if (len(s) == 0):
-            print('Time taken by generation: ' (time.time() - time1))
+            print('Time taken by generation: ', (time.time() - time1))
             time1 = time.time()
             print('New Generation creating...')
             generation += 1
             nextGeneration()
-
-        #redrawWindow(win)
+            
+        redrawWindow(win)
+        input("redraw next?: length of s: "+str(len(s[0].body)))
 
 def nextGeneration():
     global s, population, saved_snakes, generation, snack
@@ -299,27 +357,33 @@ def nextGeneration():
         s.append(pickOne())
         snack.append(cube(randomSnack(rows, s[i]), (150,0,0)))
     pickOne().brain.save('savedBrain')
+    print('Best Score of previous generation: ', len(pickOne().body))
     print("New Generation: ", generation)
-    if generation%10 == 0:
-        c = input("Paused, press anything to continue")
+    # if generation%10 == 0:
+    #     c = input("Paused, press anything to continue")
     saved_snakes = []
     
-
 def pickOne():
+    global saved_snakes, rows
+    
     index = 0
-    r = random.randrange(0,1)
 
-    global saved_snakes
+    #r = random.randrange(0,1)
+    # while r>0:
+    #     r = r - saved_snakes[index].fitness
+    #     index += 1
+    # index -= 1
 
-    while r>0:
-        r = r - saved_snakes[index].fitness
-        index += 1
-    index -= 1
+    big = 1
+    for i in range(len(saved_snakes)):
+        if big < len(saved_snakes[i].body):
+            big = len(saved_snakes[i].body)
+            index = i
 
     parent = saved_snakes[index]
-    child = snake((255,255,255),(5,5),parent.brain)
-    child.mutate()
-    return child
+    parent.reset((int(rows/2),int(rows/2)))
+    parent.mutate()
+    return parent
 
 def calculateFitness():
     global population, saved_snakes
@@ -328,8 +392,6 @@ def calculateFitness():
         score += saved_snakes[i].score
 
     for i in range(population):
-        saved_snakes[i].fitness = saved_snakes[i].score/score 
-
-
+        saved_snakes[i].fitness = saved_snakes[i].score/score
 
 main()

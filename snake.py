@@ -9,8 +9,8 @@ class cube(object):
     w = 500
     def __init__(self, start, color):
         self.pos = start
-        self.dirnx = 1
-        self.dirny = 0
+        self.dirnx = 0
+        self.dirny = 1
         self.color = color
 
     def move(self, dirnx, dirny):
@@ -67,7 +67,7 @@ class snake(object):
 
         elif keys[pygame.K_DOWN]:
             self.dirnx = 0
-            self.dirny = 1
+            self.dirny = -1
             self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
 
     def move(self):
@@ -103,7 +103,7 @@ class snake(object):
         self.body = []
         self.body.append(self.head)
         self.turns = {}
-        self.dirnx = 0
+        self.dirnx = -1
         self.dirny = 0
 
     def addCube(self):
