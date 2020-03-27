@@ -3,7 +3,7 @@ import random
 import pygame
 import tkinter as tk
 from tkinter import messagebox
-from neuralNetwork import NeuralNetwork
+from  neuralNetwork import NeuralNetwork
 
 class cube(object):
     rows = 10

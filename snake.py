@@ -40,7 +40,7 @@ class snake(object):
         self.head = cube(pos, self.color)
         self.body.append(self.head)
         self.dirnx = 0
-        self.dirny = 0
+        self.dirny = 1
 
     def keys_record(self):
 
@@ -67,7 +67,7 @@ class snake(object):
 
         elif keys[pygame.K_DOWN]:
             self.dirnx = 0
-            self.dirny = -1
+            self.dirny = 1
             self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
 
     def move(self):
@@ -103,8 +103,8 @@ class snake(object):
         self.body = []
         self.body.append(self.head)
         self.turns = {}
-        self.dirnx = -1
-        self.dirny = 0
+        self.dirnx = 0
+        self.dirny = 1
 
     def addCube(self):
         tail = self.body[-1]
