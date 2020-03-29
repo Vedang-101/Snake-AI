@@ -5,6 +5,14 @@ import tkinter as tk
 from tkinter import messagebox
 from neuralNetwork import NeuralNetwork
 
+width = 500
+rows = 10
+s = []
+snack = []
+population = 250
+generation = 1
+saved_snakes = []
+
 class cube(object):
     rows = 10
     w = 500
@@ -34,12 +42,14 @@ class cube(object):
             pygame.draw.circle(surface, (0,0,0), CirceMiddle2, radius)
 
 class snake(object):
-    body = []
-    turns = {}
     def __init__(self, color, pos, nn):
+        #input('init')
         self.color = color
         self.head = cube(pos, self.color)
+        self.body = []
+        self.turns = {}
         self.body.append(self.head)
+        #print('snake head position: ',self.body[0].pos)
         self.dirnx = 0
         self.dirny = 1
 
@@ -53,6 +63,7 @@ class snake(object):
             self.brain = NeuralNetwork([8,15,9,4])
 
     def keys_record(self, index):
+        #input('keys_record')
         global snack, width
 
         # for event in pygame.event.get():
@@ -185,6 +196,7 @@ class snake(object):
             self.turns[self.head.pos[:]] = [self.dirnx, self.dirny]
 
     def move(self):
+        #input('move')
         for i,c in enumerate(self.body):
             p = c.pos[:]
             if p in self.turns:
@@ -196,30 +208,34 @@ class snake(object):
                 c.move(c.dirnx, c.dirny)
 
     def dead(self):
+        #input('dead')
         if self.body[0].dirnx == -1 and self.body[0].pos[0] <= -1:
-            #self.score -= 10
+            #print('Dead becuase of wall to left')
             return True
         elif self.body[0].dirnx == 1 and self.body[0].pos[0] >= self.body[0].rows:
-            #self.score -= 10
+            #print('Dead becuase of wall to right')
             return True
         elif self.body[0].dirny == -1 and self.body[0].pos[1] <=-1:
-            #self.score -= 10
+            #print('Dead becuase of wall to up')
             return True
         elif self.body[0].dirny == 1 and self.body[0].pos[1] >= self.body[0].rows:
-            #self.score -= 10
+            #print('Dead becuase of wall to down')
             return True
         for x in range(len(self.body)):
             if self.body[x].pos in list(map(lambda z:z.pos, self.body[x+1:])):
-                #self.score -= 10
+                #print('Dead becuase of body')
                 return True
         if self.energy <= 0:
+            #print('Dead becuase of energy')
             return True
         return False
 
     def mutate(self):
+        #input('mutate')
         self.brain.mutate(0.1)
 
     def reset(self, pos):
+        #input('reset')
         self.head = cube(pos, self.color)
         self.body = []
         self.body.append(self.head)
@@ -228,6 +244,7 @@ class snake(object):
         self.dirny = 0
 
     def addCube(self):
+        #input('add_cube')
         tail = self.body[-1]
         dx, dy = tail.dirnx, tail.dirny
 
@@ -244,6 +261,7 @@ class snake(object):
         self.body[-1].dirny = dy
 
     def draw(self, surface):
+        #input('draw')
         for i, c in enumerate(self.body):
             if i==0:
                 c.draw(surface, True)
@@ -285,43 +303,21 @@ def randomSnack(rows, item):
 
     return (x,y)
 
-def message_box(subject, content):
-    root = tk.Tk()
-    root.attributes('-topmost',True)
-    root.withdraw()
-    messagebox.showinfo(subject, content)
-    try:
-        root.destroy()
-    except:
-        pass
-
 def main():
     global width, rows, s, snack, population, generation, saved_snakes
-    width = 500
-    rows = 10
-    generation = 1
-
-    population = 1
     
     #win = pygame.display.set_mode((width,width))
-    s = []
-    snack = []
+    
     for i in range(population):
         s.append(snake((255,255,255),(int(rows/2),int(rows/2)),None))
         snack.append(cube(randomSnack(rows, s[i]), (150,0,0)))
     print('Snakes Added')
 
-    flag = True
-
-    #clock = pygame.time.Clock()
-
-    saved_snakes = []
     import time
     time1 = time.time()
-    while flag:
+    while True:
         loop = 0
         while loop<len(s):
-            print('here')
             s[loop].keys_record(loop)
             s[loop].move()
             s[loop].score += 0.01
@@ -333,7 +329,7 @@ def main():
                 snack[loop] = cube(randomSnack(rows, s[loop]), (150,0,0))
 
             if s[loop].dead():
-                print('dead')
+                print('Dead: ' + str(loop+1) + ' Generation: ' + str(generation))
                 saved_snakes.append(s[loop])
                 s.pop(loop)
                 snack.pop(loop)
@@ -348,7 +344,7 @@ def main():
             nextGeneration()
             
         #redrawWindow(win)
-        input("redraw next?: length of s: "+str(len(s)))
+        #input("redraw next?: length of s: "+str(len(s)))
 
 def nextGeneration():
     global s, population, saved_snakes, generation, snack
@@ -356,18 +352,23 @@ def nextGeneration():
 
     print('adding new Snakes')
     for i in range(population):
-        s.append(pickOne())
+        obj,l = pickOne()
+        obj.mutate()
+        s.append(obj)
         snack.append(cube(randomSnack(rows, s[i]), (150,0,0)))
-    pickOne().brain.save('savedBrain')
-    print('Best Score of previous generation: ', len(pickOne().body))
+    
+    obj,l = pickOne()
+    obj.brain.save('savedBrain')
+
+    print('Best Score of previous generation: ', l)
+    
     print("New Generation: ", generation)
-    # if generation%10 == 0:
-    #     c = input("Paused, press anything to continue")
+    if generation%100 == 0:
+        c = input("Paused, press anything to continue")
     saved_snakes = []
     
 def pickOne():
     global saved_snakes, rows
-    
     index = 0
 
     #r = random.randrange(0,1)
@@ -383,11 +384,8 @@ def pickOne():
             index = i
 
     parent = saved_snakes[index]
-    parent.reset((int(rows/2),int(rows/2)))
-    parent.mutate()
-    return parent
-
-    #child = snake(())
+    child = snake((random.randint(0,255),random.randint(0,255),random.randint(0,255)), (int(rows/2),int(rows/2)), parent.brain)
+    return child, len(parent.body)
 
 def calculateFitness():
     global population, saved_snakes
