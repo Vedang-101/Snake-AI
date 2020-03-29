@@ -3,11 +3,7 @@ import random
 import math
 
 def sigmoid(x):
-	try:	
-		ans = 1/(1+math.exp(-x))
-	except OverflowError:
-		ans = 0
-	return ans
+	return 1/(1+math.exp(-x))
 
 def Dsigmoid(y):
 	#return sigmoid(x) * (1- sigmoid(x))

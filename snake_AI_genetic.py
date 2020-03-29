@@ -14,7 +14,7 @@ generation = 1
 saved_snakes = []
 
 class cube(object):
-    rows = 10
+    rows = 50
     w = 500
     def __init__(self, start, color):
         self.pos = start
@@ -60,11 +60,12 @@ class snake(object):
         if nn!= None:
             self.brain = nn.copy()
         else:
-            self.brain = NeuralNetwork([8,15,9,4])
+            #self.brain = NeuralNetwork([25,18,18,4])
+            self.brain = NeuralNetwork([14,10,6,4])
 
-    def keys_record(self, index):
+    def think(self, index):
         #input('keys_record')
-        global snack, width
+        global snack, width, rows
 
         # for event in pygame.event.get():
         #     if event.type == pygame.QUIT:
@@ -163,9 +164,65 @@ class snake(object):
         else:
             inp.append(0)
 
+        inp.append(self.dirnx)
+        inp.append(self.dirny)
+        inp.append(self.body[0].pos[0]/rows)
+        inp.append(self.body[0].pos[1]/rows)
+        inp.append(snack[index].pos[0]/rows)
+        inp.append(snack[index].pos[1]/rows)
+
         inp.append(self.energy/(self.body[0].rows * self.body[0].rows))
 
         keys = self.brain.feedforward(inp)
+
+        #neuralNet Architecture 24,18,18,4
+        #inputs =   8x Distance to food
+        #           8x Distance to its tail
+        #           8x Distance to wall
+        # normalize = rows ** 2
+        # w = (self.body[0].pos[0] - snack[index].pos[0])/rows
+        # n = (self.body[0].pos[1] - snack[index].pos[1])/rows
+        # e = (snack[index].pos[0] - self.body[0].pos[0])/rows
+        # s = (snack[index].pos[1] - self.body[0].pos[1])/rows
+        
+        # nw = (((w*w) + (n*n)) ** 0.5)/normalize * (-1 if (w < 0 or n < 0) else 1)
+        # ne = (((e*e) + (n*n)) ** 0.5)/normalize * (-1 if (e < 0 or n < 0) else 1)
+        # se = (((e*e) + (s*s)) ** 0.5)/normalize * (-1 if (e < 0 or s < 0) else 1)
+        # sw = (((w*w) + (s*s)) ** 0.5)/normalize * (-1 if (w < 0 or s < 0) else 1)
+
+        # distance_food = [w,nw,n,ne,e,se,s,sw]
+
+        # w = (self.body[0].pos[0] - self.body[-1].pos[0])/rows
+        # n = (self.body[0].pos[1] - self.body[-1].pos[1])/rows
+        # e = (self.body[-1].pos[0] - self.body[0].pos[0])/rows
+        # s = (self.body[-1].pos[1] - self.body[0].pos[1])/rows
+        
+        # nw = (((w*w) + (n*n)) ** 0.5)/normalize * (-1 if (w < 0 or n < 0) else 1)
+        # ne = (((e*e) + (n*n)) ** 0.5)/normalize * (-1 if (e < 0 or n < 0) else 1)
+        # se = (((e*e) + (s*s)) ** 0.5)/normalize * (-1 if (e < 0 or s < 0) else 1)
+        # sw = (((w*w) + (s*s)) ** 0.5)/normalize * (-1 if (w < 0 or s < 0) else 1)
+
+        # distance_tail = [w,nw,n,ne,e,se,s,sw]
+        
+        # w = (self.body[0].pos[0])/rows
+        # n = (self.body[0].pos[1])/rows
+        # e = (self.body[0].rows - 1 - self.body[0].pos[0])/rows
+        # s = (self.body[0].rows - 1 - self.body[0].pos[1])/rows
+        
+        # nw = (((w*w) + (n*n)) ** 0.5)/normalize * (-1 if (w < 0 or n < 0) else 1)
+        # ne = (((e*e) + (n*n)) ** 0.5)/normalize * (-1 if (e < 0 or n < 0) else 1)
+        # se = (((e*e) + (s*s)) ** 0.5)/normalize * (-1 if (e < 0 or s < 0) else 1)
+        # sw = (((w*w) + (s*s)) ** 0.5)/normalize * (-1 if (w < 0 or s < 0) else 1)
+
+        # distance_wall = [w,nw,n,ne,e,se,s,sw]
+
+        # energy = self.energy/(self.body[0].rows ** 2)
+        
+        # inp = [ distance_food[0],distance_food[1],distance_food[2],distance_food[3],distance_food[4],distance_food[5],distance_food[6],distance_food[7],
+        #         distance_tail[0],distance_tail[1],distance_tail[2],distance_tail[3],distance_tail[4],distance_tail[5],distance_tail[6],distance_tail[7],
+        #         distance_wall[0],distance_wall[1],distance_wall[2],distance_wall[3],distance_wall[4],distance_wall[5],distance_wall[6],distance_wall[7], energy ]
+        
+        # keys = self.brain.feedforward(inp)
 
         big = keys[0]
         index = 0
@@ -318,18 +375,17 @@ def main():
     while True:
         loop = 0
         while loop<len(s):
-            s[loop].keys_record(loop)
+            s[loop].think(loop)
             s[loop].move()
-            s[loop].score += 0.01
             s[loop].energy -= 1
             if s[loop].body[0].pos == snack[loop].pos:
-                s[loop].score += 100
+                s[loop].score += 1
                 s[loop].energy = s[loop].body[0].rows * s[loop].body[0].rows
                 s[loop].addCube()
                 snack[loop] = cube(randomSnack(rows, s[loop]), (150,0,0))
 
             if s[loop].dead():
-                print('Dead: ' + str(loop+1) + ' Generation: ' + str(generation))
+                #print('Dead: ' + str(loop+1) + ' Generation: ' + str(generation))
                 saved_snakes.append(s[loop])
                 s.pop(loop)
                 snack.pop(loop)
@@ -363,25 +419,25 @@ def nextGeneration():
     print('Best Score of previous generation: ', l)
     
     print("New Generation: ", generation)
-    if generation%100 == 0:
-        c = input("Paused, press anything to continue")
+    # if generation%100 == 0:
+    #     input("Paused, press anything to continue")
     saved_snakes = []
     
 def pickOne():
     global saved_snakes, rows
     index = 0
 
-    #r = random.randrange(0,1)
-    # while r>0:
-    #     r = r - saved_snakes[index].fitness
-    #     index += 1
-    # index -= 1
+    r = random.randrange(0,1)
+    while r>0:
+        r = r - saved_snakes[index].fitness
+        index += 1
+    index -= 1
 
-    big = 1
-    for i in range(len(saved_snakes)):
-        if big < len(saved_snakes[i].body):
-            big = len(saved_snakes[i].body)
-            index = i
+    # big = 1
+    # for i in range(len(saved_snakes)):
+    #     if big < len(saved_snakes[i].body):
+    #         big = len(saved_snakes[i].body)
+    #         index = i
 
     parent = saved_snakes[index]
     child = snake((random.randint(0,255),random.randint(0,255),random.randint(0,255)), (int(rows/2),int(rows/2)), parent.brain)
