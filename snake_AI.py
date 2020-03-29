@@ -42,6 +42,7 @@ class snake(object):
         self.body.append(self.head)
         self.dirnx = 0
         self.dirny = 1
+        self.energy = self.body[0].rows * self.body[0].rows
         import pickle
         savedbrain = open(savePath, 'rb')
         self.brain = pickle.load(savedbrain)
@@ -150,6 +151,8 @@ class snake(object):
             inp.append(1)
         else:
             inp.append(0)
+
+        inp.append(self.energy/(self.body[0].rows * self.body[0].rows))
 
         keys = self.brain.feedforward(inp)
 
@@ -297,8 +300,10 @@ def main():
         clock.tick(10)
         s.keys_record()
         s.move()
+        s.energy -= 1
         if s.body[0].pos == snack.pos:
             s.addCube()
+            s.energy = s.body[0].rows * s.body[0].rows
             snack = cube(randomSnack(rows, s), (150,0,0))
 
         if s.dead():

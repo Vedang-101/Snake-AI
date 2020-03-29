@@ -55,9 +55,9 @@ class snake(object):
     def keys_record(self, index):
         global snack, width
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
+        # for event in pygame.event.get():
+        #     if event.type == pygame.QUIT:
+        #         pygame.quit()
         
         #inputs = wall to left, wall infront, wall right, angle to food, tail on left, tail on right, tail front, energy left
         inp = []
@@ -301,9 +301,9 @@ def main():
     rows = 10
     generation = 1
 
-    population = 2
+    population = 1
     
-    win = pygame.display.set_mode((width,width))
+    #win = pygame.display.set_mode((width,width))
     s = []
     snack = []
     for i in range(population):
@@ -321,6 +321,7 @@ def main():
     while flag:
         loop = 0
         while loop<len(s):
+            print('here')
             s[loop].keys_record(loop)
             s[loop].move()
             s[loop].score += 0.01
@@ -332,6 +333,7 @@ def main():
                 snack[loop] = cube(randomSnack(rows, s[loop]), (150,0,0))
 
             if s[loop].dead():
+                print('dead')
                 saved_snakes.append(s[loop])
                 s.pop(loop)
                 snack.pop(loop)
@@ -345,8 +347,8 @@ def main():
             generation += 1
             nextGeneration()
             
-        redrawWindow(win)
-        input("redraw next?: length of s: "+str(len(s[0].body)))
+        #redrawWindow(win)
+        input("redraw next?: length of s: "+str(len(s)))
 
 def nextGeneration():
     global s, population, saved_snakes, generation, snack
@@ -384,6 +386,8 @@ def pickOne():
     parent.reset((int(rows/2),int(rows/2)))
     parent.mutate()
     return parent
+
+    #child = snake(())
 
 def calculateFitness():
     global population, saved_snakes
