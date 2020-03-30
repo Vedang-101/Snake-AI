@@ -6,7 +6,7 @@ from tkinter import messagebox
 from  neuralNetwork import NeuralNetwork
 
 class cube(object):
-    rows = 10
+    rows = 50
     w = 500
     def __init__(self, start, color):
         self.pos = start
@@ -50,13 +50,13 @@ class snake(object):
         #self.brain = NeuralNetwork([24,18,18,4])
 
     def keys_record(self):
-        global snack, width
+        global snack, width, rows
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
         
-        #inputs = wall to left, wall infront, wall right, angle to food, tail on left, tail on right, tail front
+        #inputs = wall to left, wall infront, wall right, angle to food, tail on left, tail on right, tail front, energy left
         inp = []
         dx = self.dirnx
         dy = self.dirny
@@ -107,9 +107,6 @@ class snake(object):
             angle = (math.acos(cosAngle) * 180)/math.pi
         else:
             angle = 0
-        #print(x1,'i+',y1,'j')
-        #print(dx,'i+',-dy,'j')
-        #print(angle)
         if (dx == 1 and y1<0) or (dx == -1 and y1>0) or (dy == 1 and x1<0) or (dy == -1 and x1<0):
             angle *= -1
 
@@ -152,9 +149,65 @@ class snake(object):
         else:
             inp.append(0)
 
+        inp.append(self.dirnx)
+        inp.append(self.dirny)
+        inp.append(self.body[0].pos[0]/rows)
+        inp.append(self.body[0].pos[1]/rows)
+        inp.append(snack.pos[0]/rows)
+        inp.append(snack.pos[1]/rows)
+
         inp.append(self.energy/(self.body[0].rows * self.body[0].rows))
 
         keys = self.brain.feedforward(inp)
+
+        #neuralNet Architecture 24,18,18,4
+        #inputs =   8x Distance to food
+        #           8x Distance to its tail
+        #           8x Distance to wall
+        # normalize = rows ** 2
+        # w = (self.body[0].pos[0] - snack[index].pos[0])/rows
+        # n = (self.body[0].pos[1] - snack[index].pos[1])/rows
+        # e = (snack[index].pos[0] - self.body[0].pos[0])/rows
+        # s = (snack[index].pos[1] - self.body[0].pos[1])/rows
+        
+        # nw = (((w*w) + (n*n)) ** 0.5)/normalize * (-1 if (w < 0 or n < 0) else 1)
+        # ne = (((e*e) + (n*n)) ** 0.5)/normalize * (-1 if (e < 0 or n < 0) else 1)
+        # se = (((e*e) + (s*s)) ** 0.5)/normalize * (-1 if (e < 0 or s < 0) else 1)
+        # sw = (((w*w) + (s*s)) ** 0.5)/normalize * (-1 if (w < 0 or s < 0) else 1)
+
+        # distance_food = [w,nw,n,ne,e,se,s,sw]
+
+        # w = (self.body[0].pos[0] - self.body[-1].pos[0])/rows
+        # n = (self.body[0].pos[1] - self.body[-1].pos[1])/rows
+        # e = (self.body[-1].pos[0] - self.body[0].pos[0])/rows
+        # s = (self.body[-1].pos[1] - self.body[0].pos[1])/rows
+        
+        # nw = (((w*w) + (n*n)) ** 0.5)/normalize * (-1 if (w < 0 or n < 0) else 1)
+        # ne = (((e*e) + (n*n)) ** 0.5)/normalize * (-1 if (e < 0 or n < 0) else 1)
+        # se = (((e*e) + (s*s)) ** 0.5)/normalize * (-1 if (e < 0 or s < 0) else 1)
+        # sw = (((w*w) + (s*s)) ** 0.5)/normalize * (-1 if (w < 0 or s < 0) else 1)
+
+        # distance_tail = [w,nw,n,ne,e,se,s,sw]
+        
+        # w = (self.body[0].pos[0])/rows
+        # n = (self.body[0].pos[1])/rows
+        # e = (self.body[0].rows - 1 - self.body[0].pos[0])/rows
+        # s = (self.body[0].rows - 1 - self.body[0].pos[1])/rows
+        
+        # nw = (((w*w) + (n*n)) ** 0.5)/normalize * (-1 if (w < 0 or n < 0) else 1)
+        # ne = (((e*e) + (n*n)) ** 0.5)/normalize * (-1 if (e < 0 or n < 0) else 1)
+        # se = (((e*e) + (s*s)) ** 0.5)/normalize * (-1 if (e < 0 or s < 0) else 1)
+        # sw = (((w*w) + (s*s)) ** 0.5)/normalize * (-1 if (w < 0 or s < 0) else 1)
+
+        # distance_wall = [w,nw,n,ne,e,se,s,sw]
+
+        # energy = self.energy/(self.body[0].rows ** 2)
+        
+        # inp = [ distance_food[0],distance_food[1],distance_food[2],distance_food[3],distance_food[4],distance_food[5],distance_food[6],distance_food[7],
+        #         distance_tail[0],distance_tail[1],distance_tail[2],distance_tail[3],distance_tail[4],distance_tail[5],distance_tail[6],distance_tail[7],
+        #         distance_wall[0],distance_wall[1],distance_wall[2],distance_wall[3],distance_wall[4],distance_wall[5],distance_wall[6],distance_wall[7], energy ]
+        
+        # keys = self.brain.feedforward(inp)
 
         big = keys[0]
         index = 0
@@ -234,11 +287,8 @@ class snake(object):
         self.body[-1].dirny = dy
 
     def draw(self, surface):
-        for i, c in enumerate(self.body):
-            if i==0:
-                c.draw(surface, True)
-            else:
-                c.draw(surface)
+        for c in range(len(self.body)):
+            self.body[c].draw(surface)
 
 def drawGrid(w, rows, surface):
     sizeBtwn = w // rows
@@ -258,7 +308,7 @@ def redrawWindow(surface):
     surface.fill((0,0,0))
     s.draw(surface)
     snack.draw(surface)
-    drawGrid(width,rows,surface)
+    #drawGrid(width,rows,surface)
     pygame.display.update()
 
 def randomSnack(rows, item):
@@ -287,7 +337,7 @@ def message_box(subject, content):
 def main():
     global width, rows, s, snack
     width = 500
-    rows = 10
+    rows = 50
     win = pygame.display.set_mode((width,width))
     s = snake((255,255,255),(5,5),'savedBrain.nn')
     snack = cube(randomSnack(rows, s), (150,0,0))
