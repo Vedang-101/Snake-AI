@@ -60,7 +60,7 @@ class snake(object):
         if nn!= None:
             self.brain = nn.copy()
         else:
-            self.brain = NeuralNetwork([9, 8, 6, 4])
+            self.brain = NeuralNetwork([9, 16, 10, 4])
 
     def think(self, index):
         #input('keys_record')
