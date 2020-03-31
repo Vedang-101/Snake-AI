@@ -6,7 +6,7 @@ from tkinter import messagebox
 from  neuralNetwork import NeuralNetwork
 
 class cube(object):
-    rows = 50
+    rows = 10
     w = 500
     def __init__(self, start, color):
         self.pos = start
@@ -50,16 +50,21 @@ class snake(object):
         #self.brain = NeuralNetwork([24,18,18,4])
 
     def keys_record(self):
-        global snack, width, rows
+        #input('keys_record')
+        global snack
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
         
-        #inputs = wall to left, wall infront, wall right, angle to food, tail on left, tail on right, tail front, energy left
+        #inputs = dirX, dirY, wall to left, wall infront, wall to right, body to left, body infront, body to right, angle from food, energy
         inp = []
         dx = self.dirnx
         dy = self.dirny
+
+        inp.append(dx)
+        inp.append(dy)
+
 
         #wall to left
         if dx == 1 and (self.body[0].pos[1] - 1) == -1:
@@ -97,6 +102,97 @@ class snake(object):
         else:
             inp.append(0)
 
+        posRight = (self.body[0].pos[0]+1,self.body[0].pos[1])
+        posLeft = (self.body[0].pos[0]-1,self.body[0].pos[1])
+        posUp = (self.body[0].pos[0],self.body[0].pos[1]-1)
+        posDown = (self.body[0].pos[0],self.body[0].pos[1]+1)
+        apended = False
+        #Body On Left
+        if dx == 1:
+            for x in range(len(self.body)):
+                if posUp in list(map(lambda z:z.pos, self.body[x+1:])):
+                    apended = True
+                    inp.append(1)
+                    break
+        elif dx == -1:
+            for x in range(len(self.body)):
+                if posDown in list(map(lambda z:z.pos, self.body[x+1:])):
+                    apended = True
+                    inp.append(1)
+                    break
+        elif dy == 1:
+            for x in range(len(self.body)):
+                if posRight in list(map(lambda z:z.pos, self.body[x+1:])):
+                    apended = True
+                    inp.append(1)
+                    break
+        elif dy == -1:
+            for x in range(len(self.body)):
+                if posLeft in list(map(lambda z:z.pos, self.body[x+1:])):
+                    apended = True
+                    inp.append(1)
+                    break
+        if apended == False:
+            inp.append(0)
+
+        apended = False
+        #Body On Front
+        if dx == 1:
+            for x in range(len(self.body)):
+                if posRight in list(map(lambda z:z.pos, self.body[x+1:])):
+                    apended = True
+                    inp.append(1)
+                    break
+        elif dx == -1:
+            for x in range(len(self.body)):
+                if posLeft in list(map(lambda z:z.pos, self.body[x+1:])):
+                    apended = True
+                    inp.append(1)
+                    break
+        elif dy == 1:
+            for x in range(len(self.body)):
+                if posDown in list(map(lambda z:z.pos, self.body[x+1:])):
+                    apended = True
+                    inp.append(1)
+                    break
+        elif dy == -1:
+            for x in range(len(self.body)):
+                if posUp in list(map(lambda z:z.pos, self.body[x+1:])):
+                    apended = True
+                    inp.append(1)
+                    break
+        if apended == False:
+            inp.append(0)
+
+        apended = False
+        #Body On Right
+        if dx == 1:
+            for x in range(len(self.body)):
+                if posDown in list(map(lambda z:z.pos, self.body[x+1:])):
+                    apended = True
+                    inp.append(1)
+                    break
+        elif dx == -1:
+            for x in range(len(self.body)):
+                if posUp in list(map(lambda z:z.pos, self.body[x+1:])):
+                    apended = True
+                    inp.append(1)
+                    break
+        elif dy == 1:
+            for x in range(len(self.body)):
+                if posLeft in list(map(lambda z:z.pos, self.body[x+1:])):
+                    apended = True
+                    inp.append(1)
+                    break
+        elif dy == -1:
+            for x in range(len(self.body)):
+                if posRight in list(map(lambda z:z.pos, self.body[x+1:])):
+                    apended = True
+                    inp.append(1)
+                    break
+        if apended == False:
+            inp.append(0)
+
         #angle to the food
         x1 = snack.pos[0] - self.body[0].pos[0]
         y1 = self.body[0].pos[1] - snack.pos[1]
@@ -113,101 +209,9 @@ class snake(object):
         angle = angle/180
         inp.append(angle)
 
-        #tail on left
-        if dx == 1 and (self.body[0].pos[1] - 1) == self.body[-1].pos[1]:
-            inp.append(1)
-        elif dx == -1 and (self.body[0].pos[1] + 1) == self.body[-1].pos[1]:
-            inp.append(1)
-        elif dy == 1 and (self.body[0].pos[0] + 1) == self.body[-1].pos[0]:
-            inp.append(1)
-        elif dy == -1 and (self.body[0].pos[0] - 1) == self.body[-1].pos[0]:
-            inp.append(1)
-        else:
-            inp.append(0)
-
-        #tail infront
-        if dx == 1 and (self.body[0].pos[0] + 1) == self.body[-1].pos[0]:
-            inp.append(1)
-        elif dx == -1 and (self.body[0].pos[0] - 1) == self.body[-1].pos[0]:
-            inp.append(1)
-        elif dy == 1 and (self.body[0].pos[1] + 1) == self.body[-1].pos[1]:
-            inp.append(1)
-        elif dy == -1 and (self.body[0].pos[1] - 1) == self.body[-1].pos[1]:
-            inp.append(1)
-        else:
-            inp.append(0)
-
-        #tail to right
-        if dx == 1 and (self.body[0].pos[1] + 1) == self.body[-1].pos[1]:
-            inp.append(1)
-        elif dx == -1 and (self.body[0].pos[1] - 1) == self.body[-1].pos[1]:
-            inp.append(1)
-        elif dy == 1 and (self.body[0].pos[0] - 1) == self.body[-1].pos[0]:
-            inp.append(1)
-        elif dy == -1 and (self.body[0].pos[0] + 1) == self.body[-1].pos[0]:
-            inp.append(1)
-        else:
-            inp.append(0)
-
-        inp.append(self.dirnx)
-        inp.append(self.dirny)
-        inp.append(self.body[0].pos[0]/rows)
-        inp.append(self.body[0].pos[1]/rows)
-        inp.append(snack.pos[0]/rows)
-        inp.append(snack.pos[1]/rows)
-
-        inp.append(self.energy/(self.body[0].rows * self.body[0].rows))
+        print(inp)
 
         keys = self.brain.feedforward(inp)
-
-        #neuralNet Architecture 24,18,18,4
-        #inputs =   8x Distance to food
-        #           8x Distance to its tail
-        #           8x Distance to wall
-        # normalize = rows ** 2
-        # w = (self.body[0].pos[0] - snack[index].pos[0])/rows
-        # n = (self.body[0].pos[1] - snack[index].pos[1])/rows
-        # e = (snack[index].pos[0] - self.body[0].pos[0])/rows
-        # s = (snack[index].pos[1] - self.body[0].pos[1])/rows
-        
-        # nw = (((w*w) + (n*n)) ** 0.5)/normalize * (-1 if (w < 0 or n < 0) else 1)
-        # ne = (((e*e) + (n*n)) ** 0.5)/normalize * (-1 if (e < 0 or n < 0) else 1)
-        # se = (((e*e) + (s*s)) ** 0.5)/normalize * (-1 if (e < 0 or s < 0) else 1)
-        # sw = (((w*w) + (s*s)) ** 0.5)/normalize * (-1 if (w < 0 or s < 0) else 1)
-
-        # distance_food = [w,nw,n,ne,e,se,s,sw]
-
-        # w = (self.body[0].pos[0] - self.body[-1].pos[0])/rows
-        # n = (self.body[0].pos[1] - self.body[-1].pos[1])/rows
-        # e = (self.body[-1].pos[0] - self.body[0].pos[0])/rows
-        # s = (self.body[-1].pos[1] - self.body[0].pos[1])/rows
-        
-        # nw = (((w*w) + (n*n)) ** 0.5)/normalize * (-1 if (w < 0 or n < 0) else 1)
-        # ne = (((e*e) + (n*n)) ** 0.5)/normalize * (-1 if (e < 0 or n < 0) else 1)
-        # se = (((e*e) + (s*s)) ** 0.5)/normalize * (-1 if (e < 0 or s < 0) else 1)
-        # sw = (((w*w) + (s*s)) ** 0.5)/normalize * (-1 if (w < 0 or s < 0) else 1)
-
-        # distance_tail = [w,nw,n,ne,e,se,s,sw]
-        
-        # w = (self.body[0].pos[0])/rows
-        # n = (self.body[0].pos[1])/rows
-        # e = (self.body[0].rows - 1 - self.body[0].pos[0])/rows
-        # s = (self.body[0].rows - 1 - self.body[0].pos[1])/rows
-        
-        # nw = (((w*w) + (n*n)) ** 0.5)/normalize * (-1 if (w < 0 or n < 0) else 1)
-        # ne = (((e*e) + (n*n)) ** 0.5)/normalize * (-1 if (e < 0 or n < 0) else 1)
-        # se = (((e*e) + (s*s)) ** 0.5)/normalize * (-1 if (e < 0 or s < 0) else 1)
-        # sw = (((w*w) + (s*s)) ** 0.5)/normalize * (-1 if (w < 0 or s < 0) else 1)
-
-        # distance_wall = [w,nw,n,ne,e,se,s,sw]
-
-        # energy = self.energy/(self.body[0].rows ** 2)
-        
-        # inp = [ distance_food[0],distance_food[1],distance_food[2],distance_food[3],distance_food[4],distance_food[5],distance_food[6],distance_food[7],
-        #         distance_tail[0],distance_tail[1],distance_tail[2],distance_tail[3],distance_tail[4],distance_tail[5],distance_tail[6],distance_tail[7],
-        #         distance_wall[0],distance_wall[1],distance_wall[2],distance_wall[3],distance_wall[4],distance_wall[5],distance_wall[6],distance_wall[7], energy ]
-        
-        # keys = self.brain.feedforward(inp)
 
         big = keys[0]
         index = 0
@@ -337,7 +341,7 @@ def message_box(subject, content):
 def main():
     global width, rows, s, snack
     width = 500
-    rows = 50
+    rows = 10
     win = pygame.display.set_mode((width,width))
     s = snake((255,255,255),(5,5),'savedBrain.nn')
     snack = cube(randomSnack(rows, s), (150,0,0))
@@ -361,5 +365,6 @@ def main():
             message_box('AI Lost','Try Again?')
             s.reset((5,5))
         redrawWindow(win)
+        #input('draw next?')
 
 main()
