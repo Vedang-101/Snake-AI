@@ -1,7 +1,7 @@
 # Snakes in AI
 
-This is part of my course project for the course of Machine Learning. In this project I decided to use my previous librabry for Neural Networks - Python ported version of [Toy Neural Network Librabry by Dan Shiffman](https://www.youtube.com/playlist?list=PLRqwX-V7Uu6aCibgK1PTWWu9by6XFdCfh)
-Thus by using PyGame Library and the Neural Network Librabry the Snake AI is trained to dodge walls, avoid eating its own body and eat his snacks.
+This is part of my course project for the course of Machine Learning. In this project I decided to use my previous library for Neural Networks - Python ported version of [Toy Neural Network Librabry by Dan Shiffman](https://www.youtube.com/playlist?list=PLRqwX-V7Uu6aCibgK1PTWWu9by6XFdCfh)
+Thus, by using PyGame Library and the Neural Network Librabry the Snake AI is trained to dodge walls, avoid eating its own body and eat his snack.
 The neural network architecture for the snake is (9,16,10,4)<br>
 <p align="center">
   <img width="300" height="300" src="Images/Cover.png">
